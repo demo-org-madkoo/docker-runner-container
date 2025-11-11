@@ -29,9 +29,11 @@ app.get('/api/greet/:name', (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
-  console.log(`📍 Visit http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server is running on port ${PORT}`);
+    console.log(`📍 Visit http://localhost:${PORT}`);
+  });
+}
 
 module.exports = app;
