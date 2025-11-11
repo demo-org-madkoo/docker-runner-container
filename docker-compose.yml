@@ -10,6 +10,7 @@ services:
     env_file:
       - ./variables.env
     platform: windows/amd64
+    restart: unless-stopped
 
   # Linux Runner
   runner-linux:
@@ -22,3 +23,4 @@ services:
     env_file:
       - ./variables.env
     platform: linux/amd64
+    restart: unless-stopped

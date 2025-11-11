@@ -53,6 +53,16 @@ RUN Invoke-WebRequest -Uri "https://github.com/actions/runner/releases/download/
     Expand-Archive -Path ".\\actions-runner.zip" -DestinationPath '.'; \
     Remove-Item ".\\actions-runner.zip" -Force
 
+# Create a non-administrator user to run the GitHub Actions runner
+RUN net user runneradmin /add; \
+    net localgroup Users runneradmin /add
+
+# Grant permissions to the runner user
+RUN icacls C:\\actions-runner /grant runneradmin:F /t
+
+# Switch to the non-administrator user
+USER runneradmin
+
 #Add GitHub runner configuration startup script
 ADD scripts/start.ps1 .
 ADD scripts/Cleanup-Runners.ps1 .

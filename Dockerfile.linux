@@ -47,8 +47,15 @@ RUN export RUNNER_ARCH=$(if [ "$(uname -m)" = "x86_64" ]; then echo "x64"; else 
 # Install runner dependencies
 RUN ./bin/installdependencies.sh
 
-# Add GitHub runner configuration startup script
+# Add GitHub runner configuration startup script (before changing user)
 COPY scripts/start.sh .
 RUN chmod +x start.sh
+
+# Create a non-root user to run the GitHub Actions runner
+RUN useradd -m -s /bin/bash runner && \
+    chown -R runner:runner /actions-runner
+
+# Switch to the non-root user
+USER runner
 
 ENTRYPOINT ["./start.sh"]
