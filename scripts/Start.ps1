@@ -12,24 +12,46 @@ Param (
 #Use --with-token to pass in a PAT token on standard input. The minimum required scopes for the token are: "repo", "read:org".
 #Alternatively, gh will use the authentication token found in environment variables. See gh help environment for more info.
 #To use gh in GitHub Actions, add GH_TOKEN: $ to "env". on Docker run: Docker run -e GH_TOKEN='myPatToken'
-gh auth login
+Write-Host "Starting GitHub Runner setup..."
+Write-Host "Owner: $owner"
+Write-Host "Repository: $repo"
+
+# GH CLI will automatically use GH_TOKEN environment variable
+# No need to pipe it to gh auth login
+Write-Host "Authenticating with GitHub..."
 
 #Get Runner registration Token
+Write-Host "Requesting runner registration token..."
 $jsonObj = gh api --method POST -H "Accept: application/vnd.github.v3+json" "/repos/$owner/$repo/actions/runners/registration-token"
 $regToken = (ConvertFrom-Json -InputObject $jsonObj).token
+
+if ([string]::IsNullOrEmpty($regToken)) {
+    Write-Error "Failed to get registration token. Check your PAT permissions and repository access."
+    exit 1
+}
+Write-Host "Registration token obtained successfully"
 $runnerBaseName = "dockerNode-"
 $runnerName = $runnerBaseName + (((New-Guid).Guid).replace("-", "")).substring(0, 5)
 
 try {
     #Register new runner instance
-    write-host "Registering GitHub Self Hosted Runner on: $owner/$repo"
+    Write-Host "Registering GitHub Self Hosted Runner on: $owner/$repo"
+    Write-Host "Runner name: $runnerName"
+    
     ./config.cmd --unattended --url "https://github.com/$owner/$repo" --token $regToken --name $runnerName
+    
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to configure runner"
+        exit 1
+    }
+    Write-Host "Runner configured successfully"
 
     #Remove PAT token after registering new instance
     $pat=$null
     $env:GH_TOKEN=$null
 
     #Start runner listener for jobs
+    Write-Host "Starting runner..."
     ./run.cmd
 }
 catch {

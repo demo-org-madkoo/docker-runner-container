@@ -1,4 +1,4 @@
-name: Windows_Container_Workflow
+name: Linux_Container_Workflow
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ env:
 
 jobs:
   build-and-push:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
@@ -26,6 +26,5 @@ jobs:
 
       - name: 'Build and push image'
         run: |
-          docker build --build-arg RUNNER_VERSION=${{ env.RUNNER_VERSION }} -t ghcr.io/${{ github.repository_owner }}/dockercomp-github-runner-win:${{ env.RUNNER_VERSION }} .
-          docker push ghcr.io/${{ github.repository_owner }}/dockercomp-github-runner-win:${{ env.RUNNER_VERSION }}
-
+          docker build -f Dockerfile.linux --build-arg RUNNER_VERSION=${{ env.RUNNER_VERSION }} -t ghcr.io/${{ github.repository_owner }}/dockercomp-github-runner-linux:${{ env.RUNNER_VERSION }} .
+          docker push ghcr.io/${{ github.repository_owner }}/dockercomp-github-runner-linux:${{ env.RUNNER_VERSION }}
