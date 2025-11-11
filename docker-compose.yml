@@ -1,6 +1,3 @@
----
-version: '3.8'
-
 services:
   # Windows Runner
   runner-windows:
