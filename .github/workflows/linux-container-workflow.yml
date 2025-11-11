@@ -1,0 +1,27 @@
+name: Linux_Container_Workflow
+
+on:
+  workflow_dispatch:
+
+env:
+  RUNNER_VERSION: 2.325.0
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      # checkout the repo
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@main
+
+      - name: 'Login to GitHub Container Registry'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 'Build and push image'
+        run: |
+          docker build -f Dockerfile.linux --build-arg RUNNER_VERSION=${{ env.RUNNER_VERSION }} -t ghcr.io/${{ github.repository_owner }}/dockercomp-github-runner-linux:${{ env.RUNNER_VERSION }} .
+          docker push ghcr.io/${{ github.repository_owner }}/dockercomp-github-runner-linux:${{ env.RUNNER_VERSION }}

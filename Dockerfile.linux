@@ -1,0 +1,54 @@
+##### BASE IMAGE INFO ######
+# Using Ubuntu 22.04 LTS as the base image for Linux runners
+# This provides a stable, well-supported platform for GitHub Actions runners
+
+FROM ubuntu:22.04
+
+# Input GitHub runner version argument
+ARG RUNNER_VERSION=2.325.0
+
+LABEL Author="madkoo"
+LABEL Email="madkoo@github.com"
+LABEL GitHub="https://github.com/madkoo"
+LABEL BaseImage="ubuntu:22.04"
+LABEL RunnerVersion=${RUNNER_VERSION}
+
+# Avoid prompts from apt
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Set working directory
+WORKDIR /actions-runner
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    git \
+    jq \
+    ca-certificates \
+    apt-transport-https \
+    software-properties-common \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install GitHub CLI
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+    && apt-get update \
+    && apt-get install -y gh \
+    && rm -rf /var/lib/apt/lists/*
+
+# Download and extract GitHub Actions runner based on RUNNER_VERSION
+RUN export RUNNER_ARCH=$(if [ "$(uname -m)" = "x86_64" ]; then echo "x64"; else echo "arm64"; fi) \
+    && curl -o actions-runner-linux.tar.gz -L "https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-${RUNNER_ARCH}-${RUNNER_VERSION}.tar.gz" \
+    && tar xzf ./actions-runner-linux.tar.gz \
+    && rm actions-runner-linux.tar.gz
+
+# Install runner dependencies
+RUN ./bin/installdependencies.sh
+
+# Add GitHub runner configuration startup script
+COPY scripts/start.sh .
+RUN chmod +x start.sh
+
+ENTRYPOINT ["./start.sh"]

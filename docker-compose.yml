@@ -2,11 +2,26 @@
 version: '3.8'
 
 services:
-  runner:
+  # Windows Runner
+  runner-windows:
     image: dockercomp-github-runner-win:latest
     build:
       context: .
+      dockerfile: dockerfile
       args:
         RUNNER_VERSION: '2.325.0'
     env_file:
       - ./variables.env
+    platform: windows/amd64
+
+  # Linux Runner
+  runner-linux:
+    image: dockercomp-github-runner-linux:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.linux
+      args:
+        RUNNER_VERSION: '2.325.0'
+    env_file:
+      - ./variables.env
+    platform: linux/amd64
